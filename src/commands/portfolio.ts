@@ -13,7 +13,7 @@
  * portfolio come back weekly to check their value.
  */
 
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { BotCommand } from "./index.js";
 import { tcg, GAME_LABELS, type GameSlug } from "../lib/sdk.js";
 import { describeError } from "../lib/errors.js";
@@ -80,6 +80,35 @@ export const portfolioCommand: BotCommand = {
             .setMaxLength(100)
             .setAutocomplete(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("export")
+        .setDescription("Download your portfolio as JSON or CSV")
+        .addStringOption((opt) =>
+          opt
+            .setName("format")
+            .setDescription("Output format (default: json)")
+            .setRequired(false)
+            .addChoices(
+              { name: "JSON", value: "json" },
+              { name: "CSV", value: "csv" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("import")
+        .setDescription("Bulk-add cards from a multiline list")
+        .addStringOption((opt) =>
+          opt
+            .setName("cards")
+            .setDescription(
+              "One card per line. Format: '<qty> <name>' or '<qty> <name> @ <price>'",
+            )
+            .setRequired(true)
+            .setMaxLength(2000),
+        ),
     ),
 
   async execute(interaction) {
@@ -95,6 +124,8 @@ export const portfolioCommand: BotCommand = {
     if (sub === "add") return handleAdd(interaction);
     if (sub === "show") return handleShow(interaction);
     if (sub === "remove") return handleRemove(interaction);
+    if (sub === "export") return handleExport(interaction);
+    if (sub === "import") return handleImport(interaction);
   },
 
   async autocomplete(interaction) {
@@ -309,4 +340,214 @@ async function handleRemove(
     content: `✅ Removed **${row.card_name}** from your portfolio.`,
     ephemeral: true,
   });
+}
+
+// ============================================================ export
+
+async function handleExport(
+  interaction: Parameters<NonNullable<BotCommand["execute"]>>[0],
+): Promise<void> {
+  const format = interaction.options.getString("format") ?? "json";
+  const rows = listPortfolio(interaction.user.id, interaction.guildId!);
+
+  if (rows.length === 0) {
+    await interaction.reply({
+      content: "Your portfolio is empty — nothing to export.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const filename = `portfolio-${interaction.user.id}-${Date.now()}.${format}`;
+  let body: string;
+
+  if (format === "csv") {
+    // Standard CSV: header row + one row per holding. Card names are
+    // wrapped in quotes and any internal quote is doubled per RFC 4180.
+    const lines = ["card_id,card_name,qty,purchase_price,added_at"];
+    for (const row of rows) {
+      const escapedName = `"${row.card_name.replace(/"/g, '""')}"`;
+      lines.push(
+        [
+          row.card_id,
+          escapedName,
+          row.qty,
+          row.purchase_price ?? "",
+          row.added_at,
+        ].join(","),
+      );
+    }
+    body = lines.join("\n");
+  } else {
+    // JSON: pretty-printed array of plain objects, no internal SQL ids.
+    body = JSON.stringify(
+      rows.map((row) => ({
+        card_id: row.card_id,
+        card_name: row.card_name,
+        qty: row.qty,
+        purchase_price: row.purchase_price,
+        added_at: row.added_at,
+      })),
+      null,
+      2,
+    );
+  }
+
+  const attachment = new AttachmentBuilder(Buffer.from(body, "utf-8"), {
+    name: filename,
+    description: `Portfolio export — ${rows.length} cards`,
+  });
+
+  await interaction.reply({
+    content: `📥 Your portfolio (${rows.length} cards):`,
+    files: [attachment],
+    ephemeral: true,
+  });
+}
+
+// ============================================================ import
+
+/**
+ * Parse one input line into a (qty, name, optional price) tuple.
+ *
+ * Accepted formats (very forgiving — collectors paste from many
+ * different sources):
+ *
+ *   "Charizard"
+ *   "3 Charizard"
+ *   "3x Charizard"
+ *   "Charizard x3"
+ *   "3 Charizard @ 100"
+ *   "3 Charizard @ $100"
+ *   "3x Charizard $100"
+ *
+ * Returns null if the line is empty or only whitespace.
+ */
+function parseImportLine(rawLine: string): { qty: number; name: string; price: number | null } | null {
+  const line = rawLine.trim();
+  if (!line) return null;
+
+  // Strip an optional "@ price" or trailing "$price" suffix first.
+  let priceMatch = line.match(/\s+@\s*\$?([0-9]+(?:\.[0-9]+)?)$/);
+  let priceStr: string | null = priceMatch?.[1] ?? null;
+  let withoutPrice = priceMatch ? line.slice(0, priceMatch.index) : line;
+  if (!priceMatch) {
+    priceMatch = withoutPrice.match(/\s+\$([0-9]+(?:\.[0-9]+)?)$/);
+    if (priceMatch) {
+      priceStr = priceMatch[1] ?? null;
+      withoutPrice = withoutPrice.slice(0, priceMatch.index);
+    }
+  }
+
+  withoutPrice = withoutPrice.trim();
+  if (!withoutPrice) return null;
+
+  // Try to peel a leading "<n>" or "<n>x" quantity.
+  let qty = 1;
+  let name = withoutPrice;
+  const leading = withoutPrice.match(/^(\d+)\s*x?\s+(.*)$/i);
+  if (leading) {
+    qty = parseInt(leading[1]!, 10);
+    name = (leading[2] ?? "").trim();
+  } else {
+    // Or a trailing "x<n>" / "X<n>" quantity.
+    const trailing = withoutPrice.match(/^(.*)\s+x\s*(\d+)$/i);
+    if (trailing) {
+      qty = parseInt(trailing[2]!, 10);
+      name = (trailing[1] ?? "").trim();
+    }
+  }
+
+  if (!name || !Number.isFinite(qty) || qty <= 0) return null;
+  const price = priceStr != null ? parseFloat(priceStr) : null;
+  return { qty, name, price };
+}
+
+async function handleImport(
+  interaction: Parameters<NonNullable<BotCommand["execute"]>>[0],
+): Promise<void> {
+  const raw = interaction.options.getString("cards", true);
+  const lines = raw.split(/\r?\n/);
+
+  await interaction.deferReply({ ephemeral: true });
+
+  // Phase 1: parse every line. Track skipped lines so we can report.
+  const parsed: Array<{ qty: number; name: string; price: number | null }> = [];
+  const skipped: string[] = [];
+  for (const rawLine of lines) {
+    const result = parseImportLine(rawLine);
+    if (result) {
+      parsed.push(result);
+    } else if (rawLine.trim()) {
+      skipped.push(rawLine.trim());
+    }
+  }
+
+  if (parsed.length === 0) {
+    await interaction.editReply({
+      content:
+        "❓ Couldn't parse any lines. Use one card per line like `3 Charizard` or `3 Charizard @ 100`.",
+    });
+    return;
+  }
+
+  // Phase 2: resolve every name in parallel via cards.search.
+  // We cap parallelism at 8 so we don't slam the API on huge pastes.
+  const resolved: Array<{
+    parsed: { qty: number; name: string; price: number | null };
+    cardId: string | null;
+    cardName: string | null;
+  }> = [];
+
+  const concurrency = 8;
+  for (let i = 0; i < parsed.length; i += concurrency) {
+    const batch = parsed.slice(i, i + concurrency);
+    const results = await Promise.all(
+      batch.map(async (entry) => {
+        try {
+          const search = await tcg.cards.search({ q: entry.name, limit: 1 });
+          const card = search.data[0];
+          return {
+            parsed: entry,
+            cardId: card?.id ?? null,
+            cardName: card?.name ?? null,
+          };
+        } catch {
+          return { parsed: entry, cardId: null, cardName: null };
+        }
+      }),
+    );
+    resolved.push(...results);
+  }
+
+  // Phase 3: persist resolved hits, collect unresolved names.
+  let added = 0;
+  const unresolved: string[] = [];
+  for (const entry of resolved) {
+    if (!entry.cardId || !entry.cardName) {
+      unresolved.push(entry.parsed.name);
+      continue;
+    }
+    addToPortfolio({
+      userId: interaction.user.id,
+      guildId: interaction.guildId!,
+      cardId: entry.cardId,
+      cardName: entry.cardName,
+      qty: entry.parsed.qty,
+      purchasePrice: entry.parsed.price,
+    });
+    added++;
+  }
+
+  const summary = [`✅ Imported **${added}** card${added === 1 ? "" : "s"}.`];
+  if (unresolved.length > 0) {
+    summary.push(
+      `⚠️ Couldn't resolve ${unresolved.length}: ${unresolved.slice(0, 10).join(", ")}${unresolved.length > 10 ? "…" : ""}`,
+    );
+  }
+  if (skipped.length > 0) {
+    summary.push(`⚠️ Skipped ${skipped.length} unparseable line${skipped.length === 1 ? "" : "s"}.`);
+  }
+  summary.push("\nRun `/portfolio show` to see the updated holdings.");
+  await interaction.editReply({ content: summary.join("\n") });
 }
