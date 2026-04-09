@@ -16,6 +16,13 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { env } from "./lib/env.js";
 import { commandMap } from "./commands/index.js";
+import { startScheduler } from "./lib/scheduler.js";
+import { closeDb } from "./lib/db.js";
+
+// Importing workers for their side effect: each worker file calls
+// `registerJob` at module load time, which the scheduler picks up
+// when `startScheduler` runs in the ClientReady handler below.
+import "./workers/alertsWorker.js";
 
 // We only need the Guilds intent — slash commands fire as interaction
 // events which don't require message content or member intents.
@@ -27,6 +34,11 @@ client.once(Events.ClientReady, (ready) => {
     `   Serving ${ready.guilds.cache.size} guild${ready.guilds.cache.size === 1 ? "" : "s"}`,
   );
   console.log(`   ${commandMap.size} commands registered`);
+
+  // Boot the cron-driven workers (alerts polling, set release watcher,
+  // daily report). They're registered via lib/scheduler at module load
+  // and start firing on their declared schedules from this point on.
+  startScheduler(ready);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -110,7 +122,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 // the websocket connection back to Discord.
 function shutdown(signal: string) {
   console.log(`Received ${signal}, shutting down...`);
-  client.destroy().finally(() => process.exit(0));
+  client.destroy().finally(() => {
+    closeDb();
+    process.exit(0);
+  });
 }
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
