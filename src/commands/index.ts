@@ -28,6 +28,7 @@ import { priceCommand } from "./price.js";
 import { cardCommand } from "./card.js";
 import { gamesCommand } from "./games.js";
 import { helpCommand } from "./help.js";
+import { randomCommand } from "./random.js";
 
 export interface BotCommand {
   data:
@@ -43,6 +44,7 @@ export const commands: BotCommand[] = [
   priceCommand,
   cardCommand,
   gamesCommand,
+  randomCommand,
   helpCommand,
 ];
 
