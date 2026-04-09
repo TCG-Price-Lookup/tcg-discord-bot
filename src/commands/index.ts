@@ -30,6 +30,7 @@ import { gamesCommand } from "./games.js";
 import { helpCommand } from "./help.js";
 import { randomCommand } from "./random.js";
 import { compareCommand } from "./compare.js";
+import { findCommand } from "./find.js";
 
 export interface BotCommand {
   data:
@@ -47,6 +48,7 @@ export const commands: BotCommand[] = [
   gamesCommand,
   randomCommand,
   compareCommand,
+  findCommand,
   helpCommand,
 ];
 
