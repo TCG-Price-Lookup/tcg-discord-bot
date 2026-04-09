@@ -4,3 +4,10 @@ dist/
 .env.local
 *.log
 .DS_Store
+
+# SQLite database (alerts, portfolios, server config) — local state,
+# never committed. Mount as a volume in Docker for persistence.
+data/
+*.db
+*.db-wal
+*.db-shm

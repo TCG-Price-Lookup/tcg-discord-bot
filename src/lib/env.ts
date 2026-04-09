@@ -29,4 +29,10 @@ export const env = {
   DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID ?? "",
   /** TCG Price Lookup API key from https://tcgpricelookup.com/tcg-api */
   TCGLOOKUP_API_KEY: required("TCGLOOKUP_API_KEY"),
+  /**
+   * Directory where the SQLite database lives. Defaults to ./data.
+   * In Docker, mount this as a volume to persist alerts and portfolios
+   * across container restarts.
+   */
+  DATA_DIR: process.env.DATA_DIR ?? "./data",
 };

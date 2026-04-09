@@ -1,6 +1,6 @@
 {
   "name": "tcg-discord-bot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Discord bot for live trading card prices — Pokemon, MTG, Yu-Gi-Oh, Lorcana, One Piece, Star Wars: Unlimited, Flesh and Blood. Powered by the TCG Price Lookup API.",
   "type": "module",
   "private": true,
@@ -13,11 +13,15 @@
   },
   "dependencies": {
     "@tcgpricelookup/sdk": "^0.1.0",
+    "better-sqlite3": "^11.3.0",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^20.11.0",
+    "@types/node-cron": "^3.0.11",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   },
