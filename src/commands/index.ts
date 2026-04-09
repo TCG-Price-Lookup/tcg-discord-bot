@@ -38,6 +38,7 @@ import { configCommand } from "./config.js";
 import { alertCommand } from "./alert.js";
 import { leaderboardCommand } from "./leaderboard.js";
 import { glossaryCommand } from "./glossary.js";
+import { setsRecentCommand } from "./setsRecent.js";
 
 export interface BotCommand {
   data:
@@ -63,6 +64,7 @@ export const commands: BotCommand[] = [
   alertCommand,
   leaderboardCommand,
   glossaryCommand,
+  setsRecentCommand,
   helpCommand,
 ];
 
