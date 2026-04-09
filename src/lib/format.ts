@@ -109,20 +109,27 @@ export function cardEmbed(card: Card): EmbedBuilder {
  * Build the multi-result list embed for a search query.
  *
  * Discord embed descriptions are capped at 4096 chars; we keep this
- * to ~10 results to stay well below the limit and avoid wrapping.
+ * to ~10 results per page so the embed never wraps awkwardly. The
+ * `page` and `totalPages` parameters are used by the pagination
+ * footer; pass `1`/`1` for non-paginated calls.
  */
 export function searchResultsEmbed(
   query: string,
   cards: Card[],
   total: number,
-  game?: string,
+  game: string | undefined,
+  page: number = 1,
+  totalPages: number = 1,
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setColor(EMBED_COLOR)
     .setTitle(`Search: ${query}`)
     .setURL("https://tcgpricelookup.com/catalog")
     .setFooter({
-      text: `${total} match${total === 1 ? "" : "es"} · TCG Price Lookup`,
+      text:
+        totalPages > 1
+          ? `Page ${page} of ${totalPages} · ${total} match${total === 1 ? "" : "es"} · TCG Price Lookup`
+          : `${total} match${total === 1 ? "" : "es"} · TCG Price Lookup`,
     });
 
   if (game) {
@@ -140,20 +147,15 @@ export function searchResultsEmbed(
     return embed;
   }
 
-  const lines = cards.slice(0, 10).map((card, i) => {
+  // Number results within the current page so the user always sees
+  // 1-10 even on page 5. The card link itself disambiguates.
+  const lines = cards.map((card, i) => {
     const setName = card.set.name;
     const num = card.number ? ` #${card.number}` : "";
-    const game = GAME_LABELS[card.game.slug as GameSlug] ?? card.game.name;
-    return `**${i + 1}.** [${card.name}](https://tcgpricelookup.com/card/${card.id})${num} — ${setName} (${game}) · ${headlinePrice(card)}`;
+    const gameLabel = GAME_LABELS[card.game.slug as GameSlug] ?? card.game.name;
+    return `**${i + 1}.** [${card.name}](https://tcgpricelookup.com/card/${card.id})${num} — ${setName} (${gameLabel}) · ${headlinePrice(card)}`;
   });
   embed.addFields({ name: "Top results", value: lines.join("\n") });
-
-  if (total > cards.length) {
-    embed.addFields({
-      name: "More",
-      value: `Showing ${cards.length} of ${total} matches. Add a game filter or refine your search to narrow down.`,
-    });
-  }
 
   return embed;
 }
