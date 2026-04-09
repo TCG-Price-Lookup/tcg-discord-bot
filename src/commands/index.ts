@@ -37,6 +37,7 @@ import { portfolioCommand } from "./portfolio.js";
 import { configCommand } from "./config.js";
 import { alertCommand } from "./alert.js";
 import { leaderboardCommand } from "./leaderboard.js";
+import { glossaryCommand } from "./glossary.js";
 
 export interface BotCommand {
   data:
@@ -61,6 +62,7 @@ export const commands: BotCommand[] = [
   configCommand,
   alertCommand,
   leaderboardCommand,
+  glossaryCommand,
   helpCommand,
 ];
 
