@@ -105,6 +105,19 @@ const SCHEMA_SQL = `
   );
 
   CREATE INDEX IF NOT EXISTS known_sets_by_game ON known_sets(game);
+
+  CREATE TABLE IF NOT EXISTS watchlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    guild_id TEXT NOT NULL,
+    card_id TEXT NOT NULL,
+    card_name TEXT NOT NULL,
+    note TEXT,
+    added_at INTEGER NOT NULL,
+    UNIQUE(user_id, guild_id, card_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS watchlist_by_user ON watchlist(user_id, guild_id);
 `;
 
 db.exec(SCHEMA_SQL);
