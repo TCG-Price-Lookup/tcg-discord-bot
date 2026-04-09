@@ -16,6 +16,7 @@ import type { BotCommand } from "./index.js";
 import { tcg, GAME_LABELS, type GameSlug } from "../lib/sdk.js";
 import { cardEmbed, searchResultsEmbed } from "../lib/format.js";
 import { describeError } from "../lib/errors.js";
+import { getServerConfig } from "../lib/serverConfig.js";
 import {
   PAGE_SIZE,
   pageWindow,
@@ -93,9 +94,20 @@ export const priceCommand: BotCommand = {
 
   async execute(interaction) {
     const query = interaction.options.getString("card", true);
-    const game = (interaction.options.getString("game") ?? undefined) as
+    let game = (interaction.options.getString("game") ?? undefined) as
       | GameSlug
       | undefined;
+
+    // If the user didn't pick a game and the server has a default
+    // configured, fall back to that. This is what makes /config
+    // default-game actually do something useful — single-game servers
+    // can omit the filter on every call and still get scoped results.
+    if (!game && interaction.guildId) {
+      const config = getServerConfig(interaction.guildId);
+      if (config.default_game) {
+        game = config.default_game;
+      }
+    }
 
     // Defer immediately — the API call usually takes 200-800ms which
     // is longer than Discord's 3-second initial-response window allows
@@ -143,9 +155,16 @@ export const priceCommand: BotCommand = {
 
     // Honour the game filter if the user has already picked one — this
     // makes the suggestions much more relevant in single-game servers.
-    const game = (interaction.options.getString("game") ?? undefined) as
+    // Falls back to the server's default game if /config set one.
+    let game = (interaction.options.getString("game") ?? undefined) as
       | GameSlug
       | undefined;
+    if (!game && interaction.guildId) {
+      const config = getServerConfig(interaction.guildId);
+      if (config.default_game) {
+        game = config.default_game;
+      }
+    }
 
     try {
       const results = await tcg.cards.search({ q: query, game, limit: 10 });
