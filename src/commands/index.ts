@@ -40,6 +40,7 @@ import { leaderboardCommand } from "./leaderboard.js";
 import { glossaryCommand } from "./glossary.js";
 import { setsRecentCommand } from "./setsRecent.js";
 import { watchlistCommand } from "./watchlist.js";
+import { gradingCalcCommand } from "./gradingCalc.js";
 
 export interface BotCommand {
   data:
@@ -67,6 +68,7 @@ export const commands: BotCommand[] = [
   glossaryCommand,
   setsRecentCommand,
   watchlistCommand,
+  gradingCalcCommand,
   helpCommand,
 ];
 
