@@ -1,5 +1,9 @@
 /**
  * /help — bot usage and credits.
+ *
+ * Lists every command in the bot grouped by what it's good for.
+ * Updated whenever a new command lands so the embed stays the
+ * single source of truth users can read.
  */
 
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
@@ -20,23 +24,54 @@ export const helpCommand: BotCommand = {
       )
       .addFields(
         {
-          name: "/price <card> [game]",
+          name: "🔎 Lookup",
           value:
-            "Search any card by name. Optionally filter by game. Returns top results with TCGPlayer market prices.\n*Example:* `/price card:charizard game:Pokémon`",
+            "**/price** `<card> [game]` — search by name with autocomplete + pagination buttons\n" +
+            "**/card** `<id>` — full price block (every condition, graded comps) for a card UUID\n" +
+            "**/find** `<card>` — same name across all 8 games at once\n" +
+            "**/compare** `<card1> <card2>` — side-by-side price comparison\n" +
+            "**/random** `[game]` — random featured card from the catalogue\n" +
+            "**/set** `<set>` — browse cards in a specific set",
         },
         {
-          name: "/card <id>",
+          name: "📈 History (Trader plan)",
           value:
-            "Fetch a specific card by UUID (use the IDs from `/price` results) for the full price block — every condition, eBay sold averages, and PSA / BGS / CGC graded comps.",
+            "**/history** `<card> [period]` — line chart of daily prices over 7d / 30d / 90d / 1y",
         },
         {
-          name: "/games",
-          value: "Show every supported trading card game and how many cards are tracked for each.",
+          name: "🔔 Alerts",
+          value:
+            "**/alert add** — watch a card and get notified when it crosses a price\n" +
+            "**/alert list** — show your active alerts\n" +
+            "**/alert remove / pause / resume** — manage existing alerts",
+        },
+        {
+          name: "📦 Portfolio",
+          value:
+            "**/portfolio add** — add a card with optional quantity + purchase price\n" +
+            "**/portfolio show** — see your holdings with live valuations + P&L\n" +
+            "**/portfolio remove** — drop a card from your portfolio",
+        },
+        {
+          name: "🏆 Server-wide",
+          value:
+            "**/leaderboard portfolios** — top portfolio holders by current value\n" +
+            "**/leaderboard cards** — most-watched cards in this server\n" +
+            "**/games** — every supported TCG with catalog size",
+        },
+        {
+          name: "⚙️ Admin (Manage Server)",
+          value:
+            "**/config show** — see this server's config\n" +
+            "**/config default-game** — set a default game for /price\n" +
+            "**/config locale** — bot response language (en, pl, …)\n" +
+            "**/config daily-report** — pick a channel for the daily market report\n" +
+            "**/config notify-set-releases** — auto-post when new sets are added",
         },
         {
           name: "Free vs Trader",
           value:
-            "The Free plan returns TCGPlayer market prices. The **Trader** plan unlocks eBay sold averages, graded card prices, and 1-year history. The bot operator controls the plan.\n[Compare plans →](https://tcgpricelookup.com/pricing)",
+            "The Free plan returns TCGPlayer market prices. The **Trader** plan unlocks eBay sold averages, PSA / BGS / CGC graded prices, and 1-year history (`/history` chart). The bot operator controls the plan.\n[Compare plans →](https://tcgpricelookup.com/pricing)",
         },
         {
           name: "Run your own bot",

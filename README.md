@@ -25,12 +25,68 @@ Powered by the [**TCG Price Lookup API**](https://tcgpricelookup.com/tcg-api). B
 
 ## Slash commands
 
+### 🔎 Lookup
+
 | Command | What it does |
 |---|---|
-| `/price <card> [game]` | Search by card name, optionally filtered to one game. Returns top 10 results with TCGPlayer market prices. If exactly one card matches, shows the full price block. |
-| `/card <id>` | Fetch a single card by its UUID (the IDs you get from `/price` results). Returns the full price block: every condition, eBay sold averages, PSA / BGS / CGC graded prices. |
+| `/price <card> [game]` | Search by name with **autocomplete** as you type and **Prev / Next pagination buttons** on the result list. Optionally filter to one game (or set a server-wide default with `/config`). |
+| `/card <id>` | Fetch a single card by its UUID for the full price block: every condition, eBay sold averages, PSA / BGS / CGC graded comps. |
+| `/find <card>` | Cross-game search — runs the same query in parallel against all 8 supported games and returns the best match per game in one embed. |
+| `/compare <card1> <card2>` | Side-by-side price comparison with a "verdict" field showing the percentage delta. |
+| `/random [game]` | Pull a random card from the catalogue. Optional game filter. |
+| `/set <set>` | Browse cards in a specific set with autocomplete on the set name and pagination on the results. |
+
+### 📈 History (Trader plan)
+
+| Command | What it does |
+|---|---|
+| `/history <card> [period]` | Render a daily price history chart (7d / 30d / 90d / 1y) as an embed image. Footer shows the percentage change over the period. Requires the Trader plan or above. |
+
+### 🔔 Alerts
+
+| Command | What it does |
+|---|---|
+| `/alert add card:<name> price:<usd> direction:[above\|below] [channel]` | Watch a card and get notified when it crosses a threshold. The optional `channel` posts to a server channel instead of your DMs — useful for shared finance channels. |
+| `/alert list` | Show all your active alerts in this server. |
+| `/alert remove id:<n>` | Delete an alert by its ID. |
+| `/alert pause id:<n>` / `/alert resume id:<n>` | Temporarily disable / re-enable an alert without losing it. |
+
+The alerts worker polls hourly by default (override via `ALERTS_CRON` env var). Alerts have a 24-hour cool-down so a card sitting just past its threshold won't spam you.
+
+### 📦 Portfolio
+
+| Command | What it does |
+|---|---|
+| `/portfolio add card:<name> [qty] [purchase_price]` | Add a card to your portfolio with optional quantity and per-copy purchase price. |
+| `/portfolio show` | List your holdings with **live valuations**, total portfolio value, and **P&L vs purchase price**. |
+| `/portfolio remove card:<name>` | Drop a card. Autocomplete suggests only cards you actually own. |
+
+Portfolios are scoped per (user, guild) so you can keep separate stashes in different servers.
+
+### 🏆 Server-wide
+
+| Command | What it does |
+|---|---|
+| `/leaderboard portfolios` | Top portfolio holders in this server, ranked by current total value (live re-priced). |
+| `/leaderboard cards` | Cards with the most active alert subscribers in this server. |
 | `/games` | List every supported trading card game and its catalog size. |
-| `/help` | Bot usage and credits. |
+
+### ⚙️ Admin (`Manage Server` permission)
+
+| Command | What it does |
+|---|---|
+| `/config show` | Display this server's bot config. |
+| `/config default-game <game>` | Set a default game for `/price` calls without an explicit `game:` filter. Massive QoL for single-game servers. |
+| `/config clear-default-game` | Remove the default-game filter. |
+| `/config locale <locale>` | Set the bot's response language for this server (en, pl, fr, de, es, it, ja, nl, pt-BR). |
+| `/config daily-report channel:<channel> enabled:<bool>` | Configure the channel where the bot posts a daily market report at 09:00 UTC. |
+| `/config notify-set-releases channel:<channel>` | Pick a channel to be notified whenever a new set is added to the API catalogue. |
+
+### Help
+
+| Command | What it does |
+|---|---|
+| `/help` | Bot usage, command list, and credits. |
 
 ## Quick start (local development)
 
@@ -131,22 +187,62 @@ WantedBy=multi-user.target
 
 ```
 src/
-├── index.ts              # Bot entry: login + interaction dispatch
+├── index.ts              # Bot entry: login + interaction dispatch + scheduler
 ├── deploy-commands.ts    # One-shot script to register commands with Discord
 ├── commands/
 │   ├── index.ts          # Command registry (single source of truth)
-│   ├── price.ts          # /price — search by name
+│   ├── price.ts          # /price — search with autocomplete + pagination
 │   ├── card.ts           # /card — by UUID
+│   ├── find.ts           # /find — cross-game search
+│   ├── compare.ts        # /compare — side-by-side
+│   ├── random.ts         # /random — random card pull
+│   ├── set.ts            # /set — browse a set
+│   ├── history.ts        # /history — chart image (Trader plan)
+│   ├── alert.ts          # /alert — price alerts (subcommands)
+│   ├── portfolio.ts      # /portfolio — collection tracking (subcommands)
+│   ├── leaderboard.ts    # /leaderboard — server rankings
+│   ├── config.ts         # /config — admin settings (subcommands)
 │   ├── games.ts          # /games — list games
 │   └── help.ts           # /help — usage
+├── workers/
+│   ├── alertsWorker.ts          # Cron: poll alerts + fire DMs/channel posts
+│   ├── setsWorker.ts            # Cron: poll for new sets, post to notify channels
+│   └── dailyReportWorker.ts     # Cron: post daily market summaries
+├── i18n/
+│   ├── en.json           # English translations
+│   └── pl.json           # Polish translations
 └── lib/
-    ├── env.ts            # Strict env var parsing
+    ├── env.ts            # Strict env var parsing (incl. DATA_DIR)
     ├── sdk.ts            # Shared TCG Price Lookup client
+    ├── db.ts             # better-sqlite3 setup + schema migrations
+    ├── alertRepo.ts      # Prepared statements for alerts table
+    ├── portfolioRepo.ts  # Prepared statements for portfolios table
+    ├── setsRepo.ts       # Prepared statements for known_sets table
+    ├── serverConfig.ts   # Cached per-guild config (with write-through)
+    ├── scheduler.ts      # node-cron wrapper + job registry
+    ├── chart.ts          # quickchart.io URL builder for /history
+    ├── pagination.ts     # Button row builder + customId codec
+    ├── i18n.ts           # Locale lookup with EN fallback
     ├── format.ts         # Discord embed builders
     └── errors.ts         # SDK error → user-friendly message
 ```
 
-Adding a new command means creating a file in `src/commands/`, exporting `{ data, execute }`, and adding it to the `commands` array in `src/commands/index.ts`. The deploy script and runtime dispatcher both read from that single registry.
+**Adding a new command:** create a file in `src/commands/`, export `{ data, execute }` (plus optional `autocomplete` and `handleButton` for richer interactions), and register it in the `commands` array in `src/commands/index.ts`. The deploy script and runtime dispatcher both read from that single registry.
+
+**Adding a new background job:** create a file in `src/workers/`, call `registerJob({ name, cron, handler })` at module load, and add a side-effect import in `src/index.ts`. The scheduler picks it up automatically on `ClientReady`.
+
+## Persistent storage
+
+The bot uses **SQLite** (via `better-sqlite3`) for alerts, portfolios, server config, and known-set bookkeeping. The database file lives in `${DATA_DIR}/bot.db` (default `./data/bot.db`). In Docker, mount `/app/data` as a volume to persist state across container restarts:
+
+```bash
+docker run -d --restart unless-stopped \
+  -v tcgbot-data:/app/data \
+  -e DISCORD_TOKEN=... \
+  -e DISCORD_CLIENT_ID=... \
+  -e TCGLOOKUP_API_KEY=... \
+  tcg-discord-bot
+```
 
 ## Free vs Trader plan
 
