@@ -41,6 +41,7 @@ import { glossaryCommand } from "./glossary.js";
 import { setsRecentCommand } from "./setsRecent.js";
 import { watchlistCommand } from "./watchlist.js";
 import { gradingCalcCommand } from "./gradingCalc.js";
+import { deckcostCommand } from "./deckcost.js";
 
 export interface BotCommand {
   data:
@@ -69,6 +70,7 @@ export const commands: BotCommand[] = [
   setsRecentCommand,
   watchlistCommand,
   gradingCalcCommand,
+  deckcostCommand,
   helpCommand,
 ];
 
