@@ -1,0 +1,46 @@
+{
+  "common": {
+    "no_match": "Nie znaleziono żadnej karty.",
+    "no_match_for": "Nie znaleziono karty dla **{query}**.",
+    "rate_limited": "Przekroczono limit zapytań. Spróbuj ponownie za chwilę.",
+    "plan_required": "Ta funkcja wymaga planu Trader — ulepsz na <https://tcgpricelookup.com/tcg-api>.",
+    "guild_only": "Tej komendy można używać tylko na serwerze.",
+    "card_label": "Karta",
+    "set_label": "Set",
+    "game_label": "Gra",
+    "rarity_label": "Rzadkość",
+    "near_mint": "Near Mint",
+    "page": "Strona",
+    "of": "z",
+    "matches_zero": "{total} dopasowań",
+    "matches_one": "{total} dopasowanie",
+    "matches_other": "{total} dopasowań"
+  },
+  "price": {
+    "no_results": "Brak wyników. Spróbuj bardziej szczegółowej nazwy lub usuń filtr gry."
+  },
+  "alert": {
+    "added": "Alert **#{id}** utworzony. Powiadomię {target}, gdy **{card}** {direction} **${threshold}**.",
+    "removed": "Alert #{id} usunięty.",
+    "paused": "Alert #{id} zatrzymany.",
+    "resumed": "Alert #{id} wznowiony.",
+    "above": "przekroczy",
+    "below": "spadnie poniżej",
+    "fire_title": "🔔 Alert cenowy: {card}",
+    "fire_body": "**{card}** ma teraz **${current}** ({direction} twojego progu **${threshold}**)"
+  },
+  "portfolio": {
+    "empty": "Twoje portfolio jest puste. Dodaj karty komendą `/portfolio add card:<nazwa>`.",
+    "added": "Dodano **{qty}× {card}** do twojego portfolio.",
+    "removed": "Usunięto **{card}** z twojego portfolio.",
+    "title": "Portfolio użytkownika {user}",
+    "total_value": "Łączna wartość",
+    "pnl": "Zysk/Strata"
+  },
+  "config": {
+    "default_game_set": "Domyślna gra ustawiona na **{game}**.",
+    "default_game_cleared": "Wyczyszczono domyślną grę.",
+    "locale_set": "Język ustawiony na **{locale}**.",
+    "no_permission": "Potrzebujesz uprawnienia **Manage Server**, żeby używać /config."
+  }
+}

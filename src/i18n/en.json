@@ -1,0 +1,46 @@
+{
+  "common": {
+    "no_match": "No match found.",
+    "no_match_for": "No card found for **{query}**.",
+    "rate_limited": "Rate limit exceeded. Try again in a moment.",
+    "plan_required": "This feature requires the Trader plan — upgrade at <https://tcgpricelookup.com/tcg-api>.",
+    "guild_only": "This command only works inside a server.",
+    "card_label": "Card",
+    "set_label": "Set",
+    "game_label": "Game",
+    "rarity_label": "Rarity",
+    "near_mint": "Near Mint",
+    "page": "Page",
+    "of": "of",
+    "matches_zero": "{total} matches",
+    "matches_one": "{total} match",
+    "matches_other": "{total} matches"
+  },
+  "price": {
+    "no_results": "No matches. Try a more specific name, or remove the game filter."
+  },
+  "alert": {
+    "added": "Alert **#{id}** created. I'll notify {target} when **{card}** {direction} **${threshold}**.",
+    "removed": "Alert #{id} removed.",
+    "paused": "Alert #{id} paused.",
+    "resumed": "Alert #{id} resumed.",
+    "above": "rises above",
+    "below": "drops below",
+    "fire_title": "🔔 Price alert: {card}",
+    "fire_body": "**{card}** is now **${current}** ({direction} your threshold of **${threshold}**)"
+  },
+  "portfolio": {
+    "empty": "Your portfolio is empty. Add cards with `/portfolio add card:<name>`.",
+    "added": "Added **{qty}× {card}** to your portfolio.",
+    "removed": "Removed **{card}** from your portfolio.",
+    "title": "{user}'s portfolio",
+    "total_value": "Total value",
+    "pnl": "P&L"
+  },
+  "config": {
+    "default_game_set": "Default game set to **{game}**.",
+    "default_game_cleared": "Cleared default game.",
+    "locale_set": "Locale set to **{locale}**.",
+    "no_permission": "You need the **Manage Server** permission to use /config."
+  }
+}
