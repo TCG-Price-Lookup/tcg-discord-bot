@@ -26,31 +26,42 @@ export const helpCommand: BotCommand = {
         {
           name: "🔎 Lookup",
           value:
-            "**/price** `<card> [game]` — search by name with autocomplete + pagination buttons\n" +
-            "**/card** `<id>` — full price block (every condition, graded comps) for a card UUID\n" +
+            "**/price** `<card> [game]` — search by name with autocomplete + pagination\n" +
+            "**/card** `<id>` — full price block for a card UUID\n" +
             "**/find** `<card>` — same name across all 8 games at once\n" +
-            "**/compare** `<card1> <card2>` — side-by-side price comparison\n" +
-            "**/random** `[game]` — random featured card from the catalogue\n" +
-            "**/set** `<set>` — browse cards in a specific set",
+            "**/compare** `<a> <b>` — side-by-side price comparison\n" +
+            "**/random** `[game]` — random featured card\n" +
+            "**/set** `<set>` — browse cards in a specific set\n" +
+            "**/sets-recent** `[game]` — most recently released sets\n" +
+            "**/glossary** `<term>` — TCG terminology dictionary",
         },
         {
           name: "📈 History (Trader plan)",
           value:
-            "**/history** `<card> [period]` — line chart of daily prices over 7d / 30d / 90d / 1y",
+            "**/history** `<card> [period]` — line chart over 7d / 30d / 90d / 1y\n" +
+            "**/grading-calc** `<card>` — should you send it for grading? PSA/BGS/CGC math",
         },
         {
-          name: "🔔 Alerts",
+          name: "🔔 Alerts & 👁️ Watchlist",
           value:
             "**/alert add** — watch a card and get notified when it crosses a price\n" +
-            "**/alert list** — show your active alerts\n" +
-            "**/alert remove / pause / resume** — manage existing alerts",
+            "**/alert list / remove / pause / resume** — manage active alerts\n" +
+            "**/watchlist add / show / remove** — bookmark cards without thresholds",
         },
         {
           name: "📦 Portfolio",
           value:
-            "**/portfolio add** — add a card with optional quantity + purchase price\n" +
-            "**/portfolio show** — see your holdings with live valuations + P&L\n" +
-            "**/portfolio remove** — drop a card from your portfolio",
+            "**/portfolio add** — track a card with optional qty + purchase price\n" +
+            "**/portfolio show** — live valuations + P&L for your holdings\n" +
+            "**/portfolio import** — bulk add from a paste\n" +
+            "**/portfolio export** — JSON or CSV download\n" +
+            "**/portfolio remove** — drop a card",
+        },
+        {
+          name: "🃏 Tools",
+          value:
+            "**/deckcost** `<deck>` — paste a decklist, get the total cost\n" +
+            "**/trade** `<offer> <for>` — trade fairness evaluator",
         },
         {
           name: "🏆 Server-wide",

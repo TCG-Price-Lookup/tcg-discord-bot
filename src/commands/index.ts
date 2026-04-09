@@ -42,6 +42,7 @@ import { setsRecentCommand } from "./setsRecent.js";
 import { watchlistCommand } from "./watchlist.js";
 import { gradingCalcCommand } from "./gradingCalc.js";
 import { deckcostCommand } from "./deckcost.js";
+import { tradeCommand } from "./trade.js";
 
 export interface BotCommand {
   data:
@@ -71,6 +72,7 @@ export const commands: BotCommand[] = [
   watchlistCommand,
   gradingCalcCommand,
   deckcostCommand,
+  tradeCommand,
   helpCommand,
 ];
 
