@@ -23,6 +23,7 @@ import { closeDb } from "./lib/db.js";
 // `registerJob` at module load time, which the scheduler picks up
 // when `startScheduler` runs in the ClientReady handler below.
 import "./workers/alertsWorker.js";
+import "./workers/setsWorker.js";
 
 // We only need the Guilds intent — slash commands fire as interaction
 // events which don't require message content or member intents.
